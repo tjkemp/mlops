@@ -1,0 +1,66 @@
+# General project files
+**/data/
+**/parameters.dev.json
+
+# R generated files
+**/.Rhistory
+**/.Rapp.history
+**/.RData
+**/.Ruserdata
+**/*-Ex.R
+**/*.tar.gz
+**/*.Rcheck/
+**/.Rproj.user/
+**/vignettes/
+
+# Environment variables
+*.env
+.env
+
+# IDE generated
+.vscode/*
+!.vscode/settings-example.json
+!.vscode/tasks-example.json
+!.vscode/launch-example.json
+
+# Byte-compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging related
+venv/
+env/
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*,cover
+.hypothesis/
+.pytest_cache
+
+# Joblib files
+*.joblib
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints

@@ -1,0 +1,75 @@
+name: MLOps Demo
+
+trigger:
+  branches:
+    include:
+      - master
+    exclude:
+      - test-*
+  paths:
+    include:
+      - componentnotes/*
+      - iris/*
+      - azure-pipelines.yml
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  - group: build-secrets
+  - name: ResourceGroup
+    value: rgp-show-weu-aml-databricks
+  - name: Workspace
+    value: aml-mlops-demo
+
+stages:
+  - stage: runUnitTests
+    displayName: Test and Deploy
+    jobs:
+      - job: test
+        displayName: Run Tests
+        variables:
+          - name: ModelName
+            value: component-cond-pred
+          - name: ModelVersion
+            value: 3
+        steps:
+          - task: AzureCLI@2
+            displayName: Download Model for Unit Tests
+            inputs:
+              scriptType: bash
+              azureSubscription: neaas-test
+              scriptLocation: inlineScript
+              inlinescript: |
+                az extension add -n azure-cli-ml
+                az ml model download -i $(ModelName):$(ModelVersion) -t /tmp/azureml-models/$(ModelName)/$(ModelVersion) -g $(ResourceGroup) -w $(Workspace)
+                az ml environment download -d /tmp/env -n component-condition -g $(ResourceGroup) -w $(Workspace)
+          - script: |
+              set -e
+              docker pull nihil0/mlops-demo
+              docker run -v $(Build.SourcesDirectory):/build -v /tmp/azureml-models:/var/azureml-app/azureml-models nihil0/mlops-demo pytest --disable-warnings --junitxml test-score.xml
+            displayName: Run Code Linting and Unit Tests
+
+          - task: PublishTestResults@2
+            inputs:
+              testResultsFiles: test-*.xml
+
+  - stage: publishPipelines
+    displayName: Publish ML Pipelines
+    condition: eq(variables['Build.SourceBranch'], 'refs/heads/master')
+    jobs:
+      - job:
+        steps:
+          - task: UsePythonVersion@0
+            displayName: Set Python Version
+            inputs:
+              versionSpec: '3.7'
+
+          - script: |
+              pip install azureml-sdk==1.17.0 PyYAML
+              python train_pipeline.py --publish
+              python score_pipeline.py --publish
+            displayName: Publish piplines
+            workingDirectory: $(Build.SourcesDirectory)/iris
+            env:
+              SP_SECRET: $(SP_SECRET)
